@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>ভিন্নতা টেলিকম প্লাস | Employee Time & Salary</title>
+<style>
+:root{
+  --bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#6b7280;--primary:#2563eb;
+  --primary2:#1d4ed8;--success:#16a34a;--warning:#d97706;--danger:#dc2626;
+  --border:#e5e7eb;--shadow:0 10px 30px rgba(15,23,42,.08);--radius:18px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Bengali",sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0}
+.hidden{display:none!important}
+.app{min-height:100vh}
+.topbar{background:#0f172a;color:#fff;padding:14px 18px;position:sticky;top:0;z-index:20;box-shadow:0 4px 16px #0002}
+.topbar-inner{max-width:1180px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-weight:800;font-size:19px}.brand small{display:block;font-weight:500;color:#cbd5e1;font-size:11px}
+.container{max-width:1180px;margin:0 auto;padding:20px}
+.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+.stat .label{color:var(--muted);font-size:13px}.stat .value{font-size:27px;font-weight:800;margin-top:5px}
+.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:16px}.tab{padding:10px 14px;border-radius:12px;background:#e9eef6;color:#334155;white-space:nowrap}.tab.active{background:var(--primary);color:#fff}
+.btn{padding:11px 15px;border-radius:12px;font-weight:700;transition:.15s}.btn:active{transform:scale(.98)}
+.primary{background:var(--primary);color:#fff}.success{background:var(--success);color:#fff}.warning{background:var(--warning);color:#fff}.danger{background:var(--danger);color:#fff}.light{background:#eef2f7;color:#334155}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;gap:9px;flex-wrap:wrap}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.section-title h2,.section-title h3{margin:0}.muted{color:var(--muted)}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:6px 9px;border-radius:99px;background:#eef2f7}.status.work{background:#dcfce7;color:#166534}.status.break{background:#fef3c7;color:#92400e}.status.off{background:#f1f5f9;color:#475569}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.employee-grid{grid-template-columns:repeat(3,1fr)}
+.emp-card{position:relative}.emp-head{display:flex;justify-content:space-between;gap:10px}.avatar{width:45px;height:45px;border-radius:14px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-weight:800;font-size:18px}
+.emp-info{display:flex;gap:10px;align-items:center}.money{font-size:28px;font-weight:900;margin:12px 0 2px}.time{font-size:15px;font-weight:700}.progress{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden;margin:10px 0}.progress>i{display:block;height:100%;background:var(--primary);width:0}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}.row:last-child{border-bottom:0}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:11px;border-bottom:1px solid var(--border);font-size:14px}th{color:var(--muted);font-weight:700}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field input,.field select{width:100%;padding:11px 12px;border:1px solid #d7dce4;border-radius:11px;outline:none;background:#fff}.field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px #2563eb18}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#0f172a,#1e3a8a)}
+.login-card{width:min(430px,100%);background:#fff;border-radius:24px;padding:26px;box-shadow:0 25px 70px #0005}.login-logo{width:62px;height:62px;border-radius:18px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-size:30px;margin-bottom:14px}
+.notice{padding:12px 14px;border-radius:13px;background:#eff6ff;color:#1e40af;font-size:13px}.warning-box{padding:12px 14px;border-radius:13px;background:#fff7ed;color:#9a3412;font-size:13px}
+.employee-screen{max-width:700px;margin:auto}.big-clock{font-size:42px;font-weight:900;letter-spacing:1px}.earn-card{background:linear-gradient(135deg,#172554,#2563eb);color:#fff;border:0}.earn-card .muted{color:#dbeafe}.motivation{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:14px;border-radius:14px;margin-top:14px}
+.pin{letter-spacing:5px;text-align:center;font-size:20px}.center{text-align:center}
+.empty{text-align:center;padding:35px;color:var(--muted)}
+.toast{position:fixed;right:18px;bottom:18px;z-index:100;padding:13px 16px;border-radius:13px;background:#111827;color:#fff;box-shadow:var(--shadow);max-width:330px}
+.modal{position:fixed;inset:0;background:#0007;z-index:50;display:grid;place-items:center;padding:18px}.modal-box{background:#fff;border-radius:20px;width:min(620px,100%);max-height:90vh;overflow:auto;padding:20px}
+.footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
+@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}.employee-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.container{padding:13px}.stats,.employee-grid,.form-grid{grid-template-columns:1fr}.card{padding:15px}.big-clock{font-size:34px}.topbar{padding:12px}.brand{font-size:16px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+/* ============================================================
+   ভিন্নতা টেলিকম প্লাস v1.0
+   SINGLE HTML APP
+   ------------------------------------------------------------
+   CLOUD CONFIGURATION PLACEHOLDER
+   পরে আপনার Cloud provider-এর configuration এখানে বসাবেন।
+   কোনো secret/private key এখানে রাখবেন না।
+   ============================================================ */
+const CLOUD_CONFIG = {
+  enabled: false,
+  provider: "YOUR_CLOUD_PROVIDER",
+  apiKey: "PASTE_PUBLIC_CONFIG_HERE",
+  projectId: "PASTE_PROJECT_ID_HERE"
+};
+
+/* ---------- Basic settings ---------- */
+const KEY = "vtt_plus_v1";
+const defaultState = {
+  settings:{
+    shopName:"ভিন্নতা টেলিকম প্লাস",
+    currency:"৳",
+    adminPin:"1234",
+    targetHours:8
+  },
+  employees:[],
+  sessions:[],
+  payments:[]
+};
+
+let state = loadState();
+let currentMode = null;
+let currentEmployeeId = null;
+let activeTab = "dashboard";
+let timer = null;
+
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function loadState(){
+  try{
+    const x=JSON.parse(localStorage.getItem(KEY));
+    return x ? {...clone(defaultState),...x,settings:{...defaultState.settings,...x.settings}} : clone(defaultState);
+  }catch(e){return clone(defaultState)}
+}
+function saveState(){
+  localStorage.setItem(KEY,JSON.stringify(state));
+  render();
+}
+function uid(prefix="id"){return prefix+"_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,7)}
+function money(n){return state.settings.currency+Number(n||0).toFixed(2)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function fmtDate(ts){return ts?new Date(ts).toLocaleString("bn-BD",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"-"}
+function todayKey(ts=Date.now()){let d=new Date(ts);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function fmtDuration(ms){
+  ms=Math.max(0,ms||0);let s=Math.floor(ms/1000),h=Math.floor(s/3600);s%=3600;let m=Math.floor(s/60),sec=s%60;
+  return `${String(h).padStart(2,"0")}h ${String(m).padStart(2,"0")}m ${String(sec).padStart(2,"0")}s`;
+}
+function hours(ms){return ms/3600000}
+function toast(msg){let t=document.getElementById("toast");t.textContent=msg;t.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.add("hidden"),2800)}
+function employee(id){return state.employees.find(e=>e.id===id)}
+function activeSession(id){return state.sessions.find(s=>s.employeeId===id && !s.endAt)}
+function sessionElapsed(s){
+  let total=Date.now()-s.startAt-(s.breakMs||0);
+  if(s.breakStart) total-=Date.now()-s.breakStart;
+  return Math.max(0,total);
+}
+function calcSession(s,e,at=Date.now()){
+  const ms=sessionElapsed({...s,endAt:at});
+  const regularMs=Math.min(ms,state.settings.targetHours*3600000);
+  const overtimeMs=Math.max(0,ms-regularMs);
+  return {
+    ms,regularMs,overtimeMs,
+    regularPay:hours(regularMs)*Number(e.rate||0),
+    overtimePay:hours(overtimeMs)*Number(e.otRate||0)
+  };
+}
+function employeeEarned(id){
+  const e=employee(id); if(!e)return 0;
+  let total=0;
+  state.sessions.filter(s=>s.employeeId===id).forEach(s=>{
+    const c=calcSession(s,e,s.endAt||Date.now());
+    total+=c.regularPay+c.overtimePay;
+  });
+  return total;
+}
+function employeePaid(id){
+  return state.payments.filter(p=>p.employeeId===id).reduce((a,p)=>a+Number(p.amount||0),0);
+}
+function statusOf(id){
+  const s=activeSession(id);
+  if(!s)return "off";
+  return s.breakStart?"break":"work";
+}
+function statusHtml(st){
+  const map={work:["work","🟢","কাজ করছেন"],break:["break","☕","বিরতিতে"],off:["off","⚪","কাজ করছেন না"]};
+  const x=map[st]||map.off;
+  return `<span class="status ${x[0]}"><span class="dot"></span>${x[1]} ${x[2]}</span>`;
+}
+function initials(name){return (name||"?").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase()}
+
+function render(){
+  clearInterval(timer);
+  if(currentMode==="admin") renderAdmin();
+  else if(currentMode==="employee") renderEmployee();
+  else renderHome();
+}
+
+/* ---------- Home ---------- */
+function renderHome(){
+  document.getElementById("app").innerHTML=`
+  <div class="login">
+    <div class="login-card">
+      <div class="login-logo">📡</div>
+      <h1 style="margin:0 0 5px">${esc(state.settings.shopName)}</h1>
+      <p class="muted" style="margin-top:0">Employee Time & Salary System v1.0</p>
+      <div class="notice" style="margin:18px 0">প্রথমবার ব্যবহার করলে আগে <b>Admin Panel</b>-এ গিয়ে কর্মচারী ও Rate সেট করুন।</div>
+      <div class="actions">
+        <button class="btn primary" style="flex:1" onclick="showAdminLogin()">👑 Admin Panel</button>
+        <button class="btn light" style="flex:1" onclick="showEmployeeLogin()">👨‍💼 Employee</button>
+      </div>
+      <div class="footer">এই Version-এর ডাটা এই Browser-এর LocalStorage-এ থাকে। Cloud Sync পরে CONFIG বসালে চালু করা যাবে।</div>
+    </div>
+  </div>`;
+}
+function showAdminLogin(){
+  document.getElementById("app").innerHTML=`
+  <div class="login"><div class="login-card">
+    <div class="login-logo">👑</div><h2>Admin Login</h2>
+    <p class="muted">শুধুমাত্র মালিকের জন্য</p>
+    <div class="field"><label>Admin PIN</label><input id="adminPin" class="pin" type="password" inputmode="numeric" maxlength="12" placeholder="••••"></div>
+    <div class="actions" style="margin-top:14px"><button class="btn primary" style="flex:1" onclick="adminLogin()">Login</button><button class="btn light" onclick="renderHome()">Back</button></div>
+    <p class="muted" style="font-size:12px;margin-bottom:0">প্রাথমিক PIN: 1234 (Admin Settings থেকে পরিবর্তন করুন)</p>
+  </div></div>`;
+}
+function adminLogin(){
+  if(document.getElementById("adminPin").value===state.settings.adminPin){currentMode="admin";activeTab="dashboard";render()}
+  else toast("ভুল Admin PIN");
+}
+function showEmployeeLogin(){
+  document.getElementById("app").innerHTML=`
+  <div class="login"><div class="login-card">
+    <div class="login-logo">👨‍💼</div><h2>Employee Login</h2>
+    <p class="muted">নিজের নাম নির্বাচন করে PIN দিন</p>
+    <div class="field"><label>Employee</label><select id="empSelect">${state.employees.length?state.employees.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join(""):'<option>কোনো Employee নেই</option>'}</select></div>
+    <div class="field" style="margin-top:12px"><label>PIN</label><input id="empPin" class="pin" type="password" inputmode="numeric" maxlength="12" placeholder="••••"></div>
+    <div class="actions" style="margin-top:14px"><button class="btn primary" style="flex:1" onclick="employeeLogin()">Login</button><button class="btn light" onclick="renderHome()">Back</button></div>
+  </div></div>`;
+}
+function employeeLogin(){
+  const e=employee(document.getElementById("empSelect").value);
+  if(e && document.getElementById("empPin").value===e.pin){currentMode="employee";currentEmployeeId=e.id;render()}
+  else toast("ভুল Employee PIN");
+}
+
+/* ---------- Admin ---------- */
+function renderAdmin(){
+  const totalEarned=state.employees.reduce((a,e)=>a+employeeEarned(e.id),0);
+  const totalPaid=state.payments.reduce((a,p)=>a+Number(p.amount||0),0);
+  const working=state.employees.filter(e=>statusOf(e.id)==="work").length;
+  const brk=state.employees.filter(e=>statusOf(e.id)==="break").length;
+  document.getElementById("app").innerHTML=`
+  <div class="app">
+    <header class="topbar"><div class="topbar-inner"><div class="brand">📡 ${esc(state.settings.shopName)}<small>Owner Control Panel</small></div><button class="btn light" onclick="logout()">Logout</button></div></header>
+    <main class="container">
+      <div class="tabs">
+        ${tab("dashboard","📊 Dashboard")} ${tab("employees","👥 Employees")} ${tab("reports","📋 Reports")} ${tab("payments","💳 Payments")} ${tab("settings","⚙️ Settings")}
+      </div>
+      ${activeTab==="dashboard"?adminDashboard():activeTab==="employees"?adminEmployees():activeTab==="reports"?adminReports():activeTab==="payments"?adminPayments():adminSettings()}
+      <div class="footer">ভিন্নতা টেলিকম প্লাস v1.0 • Single HTML</div>
+    </main>
+  </div>`;
+  if(activeTab==="dashboard") startTicker();
+}
+function tab(id,label){return `<button class="tab ${activeTab===id?"active":""}" onclick="activeTab='${id}';render()">${label}</button>`}
+function adminDashboard(){
+  return `<div class="grid stats">
+    <div class="card stat"><div class="label">মোট Employee</div><div class="value">${state.employees.length}</div></div>
+    <div class="card stat"><div class="label">🟢 Working</div><div class="value">${workingCount()}</div></div>
+    <div class="card stat"><div class="label">☕ Break</div><div class="value">${breakCount()}</div></div>
+    <div class="card stat"><div class="label">মোট Earned</div><div class="value">${money(totalEarned())}</div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="section-title"><h2>🔴 Live Employee Status</h2><span class="muted">এই Browser-এর Live Session</span></div>
+    <div class="grid employee-grid">${state.employees.length?state.employees.map(adminEmpCard).join(""):'<div class="empty">এখনো কোনো Employee যোগ করা হয়নি। Employees থেকে যোগ করুন।</div>'}</div>
+  </div>`;
+}
+function workingCount(){return state.employees.filter(e=>statusOf(e.id)==="work").length}
+function breakCount(){return state.employees.filter(e=>statusOf(e.id)==="break").length}
+function totalEarned(){return state.employees.reduce((a,e)=>a+employeeEarned(e.id),0)}
+function adminEmpCard(e){
+  const s=activeSession(e.id),st=statusOf(e.id),earned=employeeEarned(e.id),paid=employeePaid(e.id),due=earned-paid;
+  const c=s?calcSession(s,e):null;
+  return `<div class="card emp-card">
+    <div class="emp-head"><div class="emp-info"><div class="avatar">${esc(initials(e.name))}</div><div><b>${esc(e.name)}</b><div class="muted" style="font-size:12px">${esc(e.role||"Employee")}</div></div></div>${statusHtml(st)}</div>
+    ${s?`<div style="margin-top:12px"><div class="time">${fmtDuration(c.ms)}</div><div class="muted" style="font-size:12px">Started: ${fmtDate(s.startAt)}</div>${s.breakStart?'<div class="warning-box" style="margin-top:8px">☕ বর্তমানে Break-এ আছেন</div>':''}</div>`:'<div class="muted" style="margin-top:16px">আজ Active Work Session নেই।</div>'}
+    <div class="money">${money(earned)}</div><div class="muted">মোট Earned</div>
+    <div class="progress"><i style="width:${Math.min(100,(c?hours(c.ms):0)/state.settings.targetHours*100)}%"></i></div>
+    <div class="row"><span>Paid</span><b>${money(paid)}</b></div><div class="row"><span>Due</span><b>${money(Math.max(0,due))}</b></div>
+  </div>`;
+}
+function adminEmployees(){
+  return `<div class="card">
+    <div class="section-title"><h2>👥 Employee Management</h2><button class="btn primary" onclick="openEmployeeModal()">+ Add Employee</button></div>
+    ${state.employees.length?`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Regular Rate</th><th>OT Rate</th><th>PIN</th><th>Status</th><th>Action</th></tr></thead><tbody>${state.employees.map(e=>`<tr><td><b>${esc(e.name)}</b><br><span class="muted">${esc(e.role||"Employee")}</span></td><td>${money(e.rate)}/h</td><td>${money(e.otRate)}/h</td><td>••••</td><td>${statusHtml(statusOf(e.id))}</td><td><div class="actions"><button class="btn light" onclick="openEmployeeModal('${e.id}')">Edit</button><button class="btn danger" onclick="deleteEmployee('${e.id}')">Delete</button></div></td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">কোনো Employee নেই। উপরের Add Employee চাপুন।</div>'}
+  </div>`;
+}
+function openEmployeeModal(id=""){
+  const e=id?employee(id):{name:"",role:"Employee",rate:0,otRate:0,pin:"1234"};
+  document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="empModal"><div class="modal-box">
+    <div class="section-title"><h2>${id?"Edit":"Add"} Employee</h2><button class="btn light" onclick="closeModal()">✕</button></div>
+    <div class="form-grid">
+      <div class="field"><label>Employee Name *</label><input id="fName" value="${esc(e.name)}"></div>
+      <div class="field"><label>Role</label><input id="fRole" value="${esc(e.role||"Employee")}"></div>
+      <div class="field"><label>Regular Hourly Rate (৳)</label><input id="fRate" type="number" min="0" step=".01" value="${e.rate||0}"></div>
+      <div class="field"><label>Overtime Hourly Rate (৳)</label><input id="fOt" type="number" min="0" step=".01" value="${e.otRate||0}"></div>
+      <div class="field"><label>Employee PIN</label><input id="fPin" inputmode="numeric" value="${esc(e.pin||"1234")}"></div>
+      <div class="field"><label>Status</label><select id="fActive"><option value="1" ${e.active!==false?"selected":""}>Active</option><option value="0" ${e.active===false?"selected":""}>Inactive</option></select></div>
+    </div>
+    <div class="notice" style="margin-top:14px">আপনি প্রত্যেক কর্মচারীর Rate আলাদাভাবে নির্ধারণ করতে পারবেন।</div>
+    <div class="actions" style="margin-top:16px"><button class="btn primary" onclick="saveEmployee('${id}')">Save Employee</button><button class="btn light" onclick="closeModal()">Cancel</button></div>
+  </div></div>`);
+}
+function closeModal(){document.getElementById("empModal")?.remove()}
+function saveEmployee(id){
+  const name=document.getElementById("fName").value.trim();
+  if(!name){toast("Employee Name দিন");return}
+  const data={name,role:document.getElementById("fRole").value.trim()||"Employee",rate:Number(document.getElementById("fRate").value||0),otRate:Number(document.getElementById("fOt").value||0),pin:document.getElementById("fPin").value.trim()||"1234",active:document.getElementById("fActive").value==="1"};
+  if(id) Object.assign(employee(id),data); else state.employees.push({id:uid("emp"),...data,createdAt:Date.now()});
+  saveState();closeModal();toast("Employee তথ্য সংরক্ষণ হয়েছে");
+}
+function deleteEmployee(id){
+  const e=employee(id);if(!e)return;
+  if(activeSession(id)){toast("এই Employee এখন Working/Break-এ আছে। আগে Leave নিতে দিন।");return}
+  if(confirm(`${e.name}-কে Delete করবেন? তার পুরনো রিপোর্টও থাকবে।`)){e.active=false;saveState();toast("Employee Inactive করা হয়েছে")}
+}
+function adminReports(){
+  const rows=state.sessions.slice().sort((a,b)=>b.startAt-a.startAt);
+  return `<div class="card"><div class="section-title"><h2>📋 Work Reports</h2><button class="btn light" onclick="exportCSV()">Export CSV</button></div>
+  ${rows.length?`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Start</th><th>End</th><th>Total</th><th>Regular Pay</th><th>OT Pay</th><th>Total</th></tr></thead><tbody>${rows.map(s=>{const e=employee(s.employeeId)||{name:"Unknown",rate:0,otRate:0};const c=calcSession(s,e,s.endAt||Date.now());return `<tr><td>${esc(e.name)}</td><td>${fmtDate(s.startAt)}</td><td>${s.endAt?fmtDate(s.endAt):'<b>Working</b>'}</td><td>${fmtDuration(c.ms)}</td><td>${money(c.regularPay)}</td><td>${money(c.overtimePay)}</td><td><b>${money(c.regularPay+c.overtimePay)}</b></td></tr>`}).join("")}</tbody></table></div>`:'<div class="empty">কোনো Work Session নেই।</div>'}
+  </div>`;
+}
+function adminPayments(){
+  return `<div class="card"><div class="section-title"><h2>💳 Salary Payments</h2><button class="btn primary" onclick="openPaymentModal()">+ Record Payment</button></div>
+  <div class="grid stats" style="margin-bottom:16px"><div class="card stat"><div class="label">Total Earned</div><div class="value">${money(totalEarned())}</div></div><div class="card stat"><div class="label">Total Paid</div><div class="value">${money(state.payments.reduce((a,p)=>a+Number(p.amount||0),0))}</div></div></div>
+  ${state.payments.length?`<div class="table-wrap"><table><thead><tr><th>Date</th><th>Employee</th><th>Amount</th><th>Note</th></tr></thead><tbody>${state.payments.slice().reverse().map(p=>`<tr><td>${fmtDate(p.at)}</td><td>${esc(employee(p.employeeId)?.name||"Unknown")}</td><td><b>${money(p.amount)}</b></td><td>${esc(p.note||"-")}</td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">এখনো কোনো Payment Record নেই।</div>'}
+  </div>`;
+}
+function openPaymentModal(){
+  if(!state.employees.length){toast("আগে Employee যোগ করুন");return}
+  document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="payModal"><div class="modal-box"><div class="section-title"><h2>💳 Record Payment</h2><button class="btn light" onclick="document.getElementById('payModal').remove()">✕</button></div>
+  <div class="field"><label>Employee</label><select id="pEmp">${state.employees.map(e=>`<option value="${e.id}">${esc(e.name)} — Due ${money(Math.max(0,employeeEarned(e.id)-employeePaid(e.id)))}</option>`).join("")}</select></div>
+  <div class="field" style="margin-top:12px"><label>Payment Amount (৳)</label><input id="pAmount" type="number" min="0" step=".01"></div>
+  <div class="field" style="margin-top:12px"><label>Note</label><input id="pNote" placeholder="যেমন: October salary"></div>
+  <div class="actions" style="margin-top:16px"><button class="btn success" onclick="savePayment()">Save Payment</button></div>
+  </div></div>`);
+}
+function savePayment(){
+  const id=document.getElementById("pEmp").value,amount=Number(document.getElementById("pAmount").value||0);
+  if(amount<=0){toast("Payment Amount দিন");return}
+  state.payments.push({id:uid("pay"),employeeId:id,amount, note:document.getElementById("pNote").value.trim(),at:Date.now()});
+  saveState();document.getElementById("payModal").remove();toast("Payment সংরক্ষণ হয়েছে");
+}
+function adminSettings(){
+  return `<div class="card"><div class="section-title"><h2>⚙️ Settings</h2></div>
+  <div class="form-grid">
+    <div class="field"><label>Shop Name</label><input id="setShop" value="${esc(state.settings.shopName)}"></div>
+    <div class="field"><label>Regular Target Hours / Day</label><input id="setHours" type="number" min="0" step=".25" value="${state.settings.targetHours}"></div>
+    <div class="field"><label>Admin PIN</label><input id="setPin" type="password" value="${esc(state.settings.adminPin)}"></div>
+  </div>
+  <div class="actions" style="margin-top:16px"><button class="btn primary" onclick="saveSettings()">Save Settings</button><button class="btn warning" onclick="backupJSON()">Backup Data</button><button class="btn light" onclick="restoreJSON()">Restore Data</button></div>
+  <div class="warning-box" style="margin-top:16px"><b>Cloud:</b> ${CLOUD_CONFIG.enabled?"Configured":"Not configured"}। এই v1.0 ফাইলে এখন LocalStorage ব্যবহার হচ্ছে। Cloud config বসানোর পর Live multi-device sync layer যুক্ত করা যাবে।</div>
+  </div>`;
+}
+function saveSettings(){
+  state.settings.shopName=document.getElementById("setShop").value.trim()||"ভিন্নতা টেলিকম প্লাস";
+  state.settings.targetHours=Number(document.getElementById("setHours").value||8);
+  state.settings.adminPin=document.getElementById("setPin").value.trim()||"1234";
+  saveState();toast("Settings আপডেট হয়েছে");
+}
+function backupJSON(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="vtt-plus-backup.json";a.click();URL.revokeObjectURL(a.href);
+}
+function restoreJSON(){
+  const input=document.createElement("input");input.type="file";input.accept=".json";
+  input.onchange=()=>{const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(x.employees&&x.sessions){state=x;saveState();toast("Backup Restore হয়েছে")}else toast("Invalid backup")}catch(e){toast("Backup file ঠিক নয়")}};r.readAsText(f)};input.click();
+}
+function exportCSV(){
+  const lines=[["Employee","Start","End","Total Hours","Regular Pay","Overtime Pay","Total Pay"].join(",")];
+  state.sessions.forEach(s=>{const e=employee(s.employeeId)||{name:"Unknown",rate:0,otRate:0};const c=calcSession(s,e,s.endAt||Date.now());lines.push([JSON.stringify(e.name),JSON.stringify(fmtDate(s.startAt)),JSON.stringify(s.endAt?fmtDate(s.endAt):""),JSON.stringify(fmtDuration(c.ms)),c.regularPay.toFixed(2),c.overtimePay.toFixed(2),(c.regularPay+c.overtimePay).toFixed(2)].join(","))});
+  const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="vtt-plus-report.csv";a.click();URL.revokeObjectURL(a.href);
+}
+
+/* ---------- Employee ---------- */
+function renderEmployee(){
+  const e=employee(currentEmployeeId);if(!e){logout();return}
+  const s=activeSession(e.id),c=s?calcSession(s,e):null,earned=employeeEarned(e.id),paid=employeePaid(e.id),due=Math.max(0,earned-paid);
+  const target=state.settings.targetHours*3600000, progress=Math.min(100,(c?c.ms:0)/target*100);
+  document.getElementById("app").innerHTML=`
+  <div class="app"><header class="topbar"><div class="topbar-inner"><div class="brand">📡 ${esc(state.settings.shopName)}<small>${esc(e.name)}</small></div><button class="btn light" onclick="logout()">Logout</button></div></header>
+  <main class="container employee-screen">
+    <div class="card earn-card"><div class="muted">আজকের আনুমানিক আয়</div><div class="money">${money(c?c.regularPay+c.overtimePay:0)}</div><div class="muted">Regular + Overtime</div>
+      <div style="margin-top:18px">${statusHtml(statusOf(e.id))}</div>
+    </div>
+    <div class="card center" style="margin-top:16px">
+      <div class="muted">আজকের Work Time</div><div class="big-clock" id="empClock">${fmtDuration(c?c.ms:0)}</div>
+      <div class="progress"><i style="width:${progress}%"></i></div>
+      <div class="muted">Regular Target: ${state.settings.targetHours} ঘণ্টা</div>
+      <div class="actions" style="justify-content:center;margin-top:18px">
+        ${!s?`<button class="btn success" style="min-width:160px" onclick="startWork()">🟢 START WORK</button>`:
+          s.breakStart?`<button class="btn primary" style="min-width:160px" onclick="resumeWork()">▶️ RESUME WORK</button>`:
+          `<button class="btn warning" onclick="breakWork()">☕ BREAK</button><button class="btn danger" onclick="leaveWork()">🔴 LEAVE / END</button>`}
+      </div>
+      ${motivation(e,s,c)}
+    </div>
+    <div class="grid stats" style="margin-top:16px">
+      <div class="card stat"><div class="label">মোট Earned</div><div class="value">${money(earned)}</div></div>
+      <div class="card stat"><div class="label">Paid</div><div class="value">${money(paid)}</div></div>
+      <div class="card stat"><div class="label">Due</div><div class="value">${money(due)}</div></div>
+      <div class="card stat"><div class="label">Overtime Rate</div><div class="value" style="font-size:20px">${money(e.otRate)}/h</div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="section-title"><h3>📋 আমার সাম্প্রতিক Work History</h3></div>
+      ${state.sessions.filter(x=>x.employeeId===e.id).slice().reverse().slice(0,8).map(s=>{const cc=calcSession(s,e,s.endAt||Date.now());return `<div class="row"><div><b>${fmtDate(s.startAt)}</b><div class="muted">${fmtDuration(cc.ms)}</div></div><b>${money(cc.regularPay+cc.overtimePay)}</b></div>`}).join("")||'<div class="empty">এখনো কোনো Work History নেই।</div>'}
+    </div>
+  </main></div>`;
+  startEmployeeTicker();
+}
+function motivation(e,s,c){
+  if(!s||!c)return `<div class="motivation">🚀 কাজ শুরু করলে আপনার সময় ও আয় এখানেই Live দেখা যাবে।</div>`;
+  const target=state.settings.targetHours*3600000;
+  if(c.ms<target){
+    const remain=target-c.ms,mins=Math.ceil(remain/60000),possible=mins/60*Number(e.rate||0);
+    return `<div class="motivation">🎯 Regular Time পূর্ণ হতে প্রায় <b>${mins} মিনিট</b> বাকি। আর একটু কাজ করলে Regular আয় <b>${money(possible)}</b> পর্যন্ত বাড়বে।</div>`;
+  }
+  const next=15*60000,extra=15/60*Number(e.otRate||0);
+  return `<div class="motivation">🔥 আপনি এখন Overtime করছেন। আরও <b>15 মিনিট</b> কাজ করলে আনুমানিক অতিরিক্ত <b>${money(extra)}</b> আয় হবে।</div>`;
+}
+function startWork(){
+  if(activeSession(currentEmployeeId)){toast("আপনার একটি Active Session আছে");return}
+  state.sessions.push({id:uid("ses"),employeeId:currentEmployeeId,startAt:Date.now(),endAt:null,breakMs:0,breakStart:null});
+  saveState();toast("কাজ শুরু হয়েছে 🟢");
+}
+function breakWork(){
+  const s=activeSession(currentEmployeeId);if(!s)return;
+  if(s.breakStart)return;
+  s.breakStart=Date.now();saveState();toast("Break শুরু হয়েছে ☕");
+}
+function resumeWork(){
+  const s=activeSession(currentEmployeeId);if(!s||!s.breakStart)return;
+  s.breakMs=(s.breakMs||0)+(Date.now()-s.breakStart);s.breakStart=null;saveState();toast("আবার কাজ শুরু হয়েছে 🟢");
+}
+function leaveWork(){
+  const s=activeSession(currentEmployeeId);if(!s)return;
+  if(s.breakStart){s.breakMs=(s.breakMs||0)+(Date.now()-s.breakStart);s.breakStart=null}
+  s.endAt=Date.now();saveState();
+  const e=employee(currentEmployeeId),c=calcSession(s,e,s.endAt);
+  toast(`কাজ শেষ। আজকের আয় ${money(c.regularPay+c.overtimePay)}`);
+}
+
+/* ---------- Live ticking ---------- */
+function startTicker(){
+  timer=setInterval(()=>{
+    if(currentMode==="admin"&&activeTab==="dashboard") renderAdmin();
+  },1000);
+}
+function startEmployeeTicker(){
+  timer=setInterval(()=>{
+    if(currentMode==="employee") renderEmployee();
+  },1000);
+}
+function logout(){currentMode=null;currentEmployeeId=null;render()}
+
+/* ---------- Cloud hook placeholder ----------
+   এখানে ভবিষ্যতে Cloud Sync functions বসবে।
+   LocalStorage version কোনো credential ছাড়াই কাজ করে।
+-------------------------------------------------- */
+const CloudSync = {
+  isReady(){return CLOUD_CONFIG.enabled===true},
+  async push(){ /* TODO: connect cloud */ },
+  async pull(){ /* TODO: connect cloud */ }
+};
+
+render();
+</script>
+</body>
+</html>
