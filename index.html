@@ -56,6 +56,11 @@ button{cursor:pointer;border:0}
 <div id="app"></div>
 <div id="toast" class="toast hidden"></div>
 
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
 <script>
 /* ============================================================
    ভিন্নতা টেলিকম প্লাস v1.0
@@ -66,10 +71,17 @@ button{cursor:pointer;border:0}
    কোনো secret/private key এখানে রাখবেন না।
    ============================================================ */
 const CLOUD_CONFIG = {
-  enabled: false,
-  provider: "YOUR_CLOUD_PROVIDER",
-  apiKey: "PASTE_PUBLIC_CONFIG_HERE",
-  projectId: "PASTE_PROJECT_ID_HERE"
+  enabled: true,
+  provider: "firebase",
+  firebase: {
+    apiKey: "AIzaSyBxm00Kp42MNclCIAD3PS4TA2bH12WPlbc",
+    authDomain: "vinnata-telecom-plus.firebaseapp.com",
+    projectId: "vinnata-telecom-plus",
+    storageBucket: "vinnata-telecom-plus.firebasestorage.app",
+    messagingSenderId: "754121291723",
+    appId: "1:754121291723:web:9f676a026038cd860b284e",
+    measurementId: "G-CV5KG9LGYZ"
+  }
 };
 
 /* ---------- Basic settings ---------- */
@@ -163,6 +175,10 @@ function render(){
 }
 
 /* ---------- Home ---------- */
+function updateCloudStatus(){
+  const el=document.getElementById("cloudStatus");
+  if(el) el.textContent=CloudSync && CloudSync.isReady()?"Connected ✓":"Offline";
+}
 function renderHome(){
   document.getElementById("app").innerHTML=`
   <div class="login">
@@ -175,7 +191,7 @@ function renderHome(){
         <button class="btn primary" style="flex:1" onclick="showAdminLogin()">👑 Admin Panel</button>
         <button class="btn light" style="flex:1" onclick="showEmployeeLogin()">👨‍💼 Employee</button>
       </div>
-      <div class="footer">এই Version-এর ডাটা এই Browser-এর LocalStorage-এ থাকে। Cloud Sync পরে CONFIG বসালে চালু করা যাবে।</div>
+      <div class="footer">Cloud Status: <b id="cloudStatus">Connecting...</b><br>প্রথম সংযোগ পরীক্ষায় LocalStorage + Firestore দুটোই ব্যবহার হচ্ছে।</div>
     </div>
   </div>`;
 }
@@ -325,7 +341,7 @@ function adminSettings(){
     <div class="field"><label>Admin PIN</label><input id="setPin" type="password" value="${esc(state.settings.adminPin)}"></div>
   </div>
   <div class="actions" style="margin-top:16px"><button class="btn primary" onclick="saveSettings()">Save Settings</button><button class="btn warning" onclick="backupJSON()">Backup Data</button><button class="btn light" onclick="restoreJSON()">Restore Data</button></div>
-  <div class="warning-box" style="margin-top:16px"><b>Cloud:</b> ${CLOUD_CONFIG.enabled?"Configured":"Not configured"}। এই v1.0 ফাইলে এখন LocalStorage ব্যবহার হচ্ছে। Cloud config বসানোর পর Live multi-device sync layer যুক্ত করা যাবে।</div>
+  <div class="warning-box" style="margin-top:16px"><b>Cloud:</b> ${CloudSync.isReady()?"Connected":"Not connected"}। Firebase সংযোগ চালু আছে; granular login/security ও employee-specific sync পরের আপডেটে আরও শক্ত করা হবে।</div>
   </div>`;
 }
 function saveSettings(){
@@ -431,13 +447,99 @@ function logout(){currentMode=null;currentEmployeeId=null;render()}
    এখানে ভবিষ্যতে Cloud Sync functions বসবে।
    LocalStorage version কোনো credential ছাড়াই কাজ করে।
 -------------------------------------------------- */
+let firebaseApp = null;
+let cloudDb = null;
+let cloudAuth = null;
+let cloudReady = false;
+
+function initFirebase(){
+  if(!CLOUD_CONFIG.enabled || CLOUD_CONFIG.provider!=="firebase") return;
+  try{
+    firebaseApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(CLOUD_CONFIG.firebase);
+    cloudDb = firebase.firestore();
+    cloudAuth = firebase.auth();
+    cloudReady = true;
+    console.log("Firebase connected:", CLOUD_CONFIG.firebase.projectId);
+  }catch(err){
+    console.error("Firebase initialization failed:", err);
+    cloudReady = false;
+  }
+}
+
 const CloudSync = {
-  isReady(){return CLOUD_CONFIG.enabled===true},
-  async push(){ /* TODO: connect cloud */ },
-  async pull(){ /* TODO: connect cloud */ }
+  isReady(){return cloudReady},
+  async pushState(){
+    if(!cloudReady) return;
+    // v1.0 cloud bridge: keep a single owner-controlled state document.
+    // This is intentionally a bridge only; production security rules will be
+    // tightened after the first successful connection test.
+    await cloudDb.collection("app_state").doc("main").set({
+      settings: state.settings,
+      employees: state.employees,
+      sessions: state.sessions,
+      payments: state.payments,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  },
+  async pullState(){
+    if(!cloudReady) return false;
+    const snap = await cloudDb.collection("app_state").doc("main").get();
+    if(!snap.exists) return false;
+    const data = snap.data();
+    if(data && data.settings && Array.isArray(data.employees)){
+      state = {
+        settings:{...defaultState.settings,...data.settings},
+        employees:Array.isArray(data.employees)?data.employees:[],
+        sessions:Array.isArray(data.sessions)?data.sessions:[],
+        payments:Array.isArray(data.payments)?data.payments:[]
+      };
+      localStorage.setItem(KEY, JSON.stringify(state));
+      return true;
+    }
+    return false;
+  },
+  listen(){
+    if(!cloudReady) return;
+    cloudDb.collection("app_state").doc("main").onSnapshot(snap=>{
+      if(!snap.exists || !snap.data()) return;
+      const data=snap.data();
+      if(data.settings && Array.isArray(data.employees)){
+        state = {
+          settings:{...defaultState.settings,...data.settings},
+          employees:Array.isArray(data.employees)?data.employees:[],
+          sessions:Array.isArray(data.sessions)?data.sessions:[],
+          payments:Array.isArray(data.payments)?data.payments:[]
+        };
+        localStorage.setItem(KEY, JSON.stringify(state));
+        render();
+      }
+    }, err=>console.warn("Cloud listener:", err));
+  }
 };
 
+// Keep the existing local-first behavior, while mirroring changes to Firestore.
+// This wrapper is intentionally simple for v1.0; authentication + granular
+// employee permissions will be added in the next update.
+const originalSaveState = saveState;
+saveState = function(){
+  originalSaveState();
+  if(CloudSync.isReady()){
+    CloudSync.pushState().catch(err=>{
+      console.warn("Cloud save failed:", err);
+      toast("Local save হয়েছে, Cloud sync হয়নি");
+    });
+  }
+};
+
+initFirebase();
+if(CloudSync.isReady()){
+  CloudSync.pullState()
+    .catch(err=>console.warn("Initial cloud pull failed:", err))
+    .finally(()=>CloudSync.listen());
+}
+
 render();
+updateCloudStatus();
 </script>
 </body>
 </html>
