@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f172a">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="apple-touch-icon" href="./icons/icon-192.png">
 <title>ভিন্নতা টেলিকম প্লাস v1.2 Trial</title>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#64748b;--primary:#2563eb;--success:#16a34a;--warning:#d97706;--danger:#dc2626;--border:#e5e7eb;--shadow:0 10px 30px #0f172a12;--r:18px}
@@ -25,10 +23,24 @@
 .footer{text-align:center;color:var(--muted);font-size:11px;padding:22px}.lock{background:#fee2e2;color:#991b1b;padding:10px 12px;border-radius:12px;font-size:13px;font-weight:800}.verify{background:#eff6ff;color:#1e40af;padding:11px 12px;border-radius:12px;font-size:13px}.timerWarn{background:#fff7ed;color:#9a3412;padding:11px 12px;border-radius:12px;font-size:13px;font-weight:800}
 @media(max-width:850px){.stats{grid-template-columns:1fr 1fr}.cards3{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.wrap{padding:12px}.stats,.cards3,.form2{grid-template-columns:1fr}.card{padding:14px}.clock{font-size:34px}}
+
+/* ---------- Online-only gate ---------- */
+#networkGate{position:fixed;inset:0;z-index:99999;background:rgba(248,250,252,.98);display:none;align-items:center;justify-content:center;padding:20px;text-align:center}
+#networkGate.show{display:flex}
+.networkBox{width:min(460px,100%);background:#fff;border:1px solid #e2e8f0;border-radius:24px;padding:28px 22px;box-shadow:0 20px 60px rgba(15,23,42,.14)}
+.networkIcon{font-size:54px;margin-bottom:10px}.networkBox h2{margin:0 0 8px}.networkBox p{color:#64748b;line-height:1.7;margin:0 0 18px}.netStatus{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:#fee2e2;color:#991b1b;font-weight:800;font-size:13px}.netStatus.ok{background:#dcfce7;color:#166534}
+.netBar{position:fixed;left:0;right:0;top:0;z-index:99998;padding:7px 12px;text-align:center;font-size:12px;font-weight:800;background:#fee2e2;color:#991b1b;display:none}.netBar.show{display:block}.netBar.ok{background:#dcfce7;color:#166534}
 </style>
 </head>
 <body>
-<div id="app"></div><div id="toast" class="toast hidden"></div>
+<div id="app"></div>
+<div id="netBar" class="netBar"></div>
+<div id="networkGate" aria-live="polite"><div class="networkBox">
+  <div class="networkIcon">🌐</div><h2>ইন্টারনেট সংযোগ প্রয়োজন</h2>
+  <p>ভিন্নতা টেলিকম প্লাস একটি <b>Online-only</b> সফটওয়্যার। ইন্টারনেট সংযোগ ছাড়া Login, Work Timer, Salary ও Cloud Data ব্যবহার করা যাবে না।</p>
+  <div id="networkStatus" class="netStatus">🔴 ইন্টারনেট নেই</div>
+  <div class="muted" style="margin-top:16px;font-size:12px">ইন্টারনেট সংযোগ ফিরে এলে এই পেজ স্বয়ংক্রিয়ভাবে আবার চালু হবে।</div>
+</div></div><div id="toast" class="toast hidden"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -64,6 +76,9 @@ const adminApp=firebase.initializeApp(FIREBASE_CONFIG,"employeeCreator");
 const adminAuth=adminApp.auth();
 
 const app=document.getElementById("app");
+const networkGate=document.getElementById("networkGate"),netBar=document.getElementById("netBar"),networkStatus=document.getElementById("networkStatus");
+let networkOK=navigator.onLine;
+let networkCheckTimer=null;
 let user=null, profile=null, mode=null, tab="dashboard", unsub=[], tick=null;
 
 const $=id=>document.getElementById(id);
@@ -76,6 +91,43 @@ const hours=ms=>ms/3600000;
 const toast=m=>{let t=$("toast");t.textContent=m;t.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.add("hidden"),3000)};
 const statusBadge=st=>({working:'<span class="status work"><span class="dot"></span>🟢 Working</span>',break:'<span class="status break"><span class="dot"></span>☕ Break</span>',off:'<span class="status off"><span class="dot"></span>⚪ Offline</span>'}[st]||'<span class="status off">Offline</span>');
 const initial=n=>(n||"?").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase();
+
+function setNetworkUI(ok){
+ networkOK=!!ok;
+ networkGate.classList.toggle("show",!networkOK);
+ netBar.classList.toggle("show",!networkOK);
+ netBar.classList.toggle("ok",networkOK);
+ netBar.textContent=networkOK?"🟢 Internet Connected":"🔴 Internet connection lost • Software paused";
+ networkStatus.classList.toggle("ok",networkOK);
+ networkStatus.textContent=networkOK?"🟢 Internet Connected":"🔴 ইন্টারনেট নেই";
+}
+function requireOnline(){
+ if(!navigator.onLine){setNetworkUI(false);return false}
+ return networkOK;
+}
+async function checkInternet(){
+ if(!navigator.onLine){setNetworkUI(false);return false}
+ try{
+   const controller=new AbortController();
+   const timer=setTimeout(()=>controller.abort(),5000);
+   await fetch("https://www.gstatic.com/generate_204?ts="+Date.now(),{cache:"no-store",mode:"no-cors",signal:controller.signal});
+   clearTimeout(timer); setNetworkUI(true); return true;
+ }catch(e){setNetworkUI(false);return false}
+}
+async function handleOffline(){
+ setNetworkUI(false); cleanup();
+}
+async function handleOnline(){
+ const ok=await checkInternet();
+ if(ok){
+   if(user&&mode){render();}
+   else{auth.currentUser?null:renderLogin()}
+ }
+}
+window.addEventListener("offline",handleOffline);
+window.addEventListener("online",handleOnline);
+checkInternet();
+networkCheckTimer=setInterval(checkInternet,15000);
 
 function cleanup(){unsub.forEach(x=>x&&x());unsub=[];clearInterval(tick);tick=null}
 function goLogin(){cleanup();user=null;profile=null;mode=null;renderLogin()}
@@ -91,7 +143,7 @@ function errorText(e){
 function renderLogin(){
  app.innerHTML=`<div class="login"><div class="loginbox">
    <div class="logo">📡</div><h1 style="margin:0 0 4px">ভিন্নতা টেলিকম প্লাস</h1><p class="muted">Employee Time & Salary System v1.1</p>
-   <div class="notice">☁️ Firebase Cloud Version<br>Admin ও Employee আলাদা Login ব্যবহার করবে।</div>
+   <div class="notice">☁️ Firebase Cloud Version<br>Admin ও Employee আলাদা Login ব্যবহার করবে।<br><b>🌐 Active Internet Connection Required</b></div>
    <div class="actions" style="margin-top:16px"><button class="btn primary" style="flex:1" onclick="showLogin('admin')">👑 Admin Login</button><button class="btn light" style="flex:1" onclick="showLogin('employee')">👨‍💼 Employee Login</button></div>
    <div class="footer">Cloud data is protected by Firebase Authentication + Firestore Rules.</div>
  </div></div>`;
@@ -106,6 +158,7 @@ function showLogin(which){
  </div></div>`;
 }
 async function login(which){
+ if(!await checkInternet()){toast("ইন্টারনেট সংযোগ ছাড়া Login করা যাবে না।");return}
  try{
   const cred=await auth.signInWithEmailAndPassword($("loginEmail").value.trim(),$("loginPass").value);
   user=cred.user;
@@ -264,6 +317,7 @@ function paymentModal(){
  <button class="btn success" onclick="savePayment()">Save Payment</button></div></div>`);
 }
 async function savePayment(){
+ if(!await checkInternet()){toast("ইন্টারনেট সংযোগ নেই।");return}
  try{await db.collection("payments").add({employeeId:$("pEmp").value,amount:Number($("pAmount").value||0),note:$("pNote").value.trim(),at:firebase.firestore.FieldValue.serverTimestamp(),createdBy:user.uid});closeModal();toast("Payment saved")}catch(e){toast(errorText(e))}
 }
 function adminSettings(s){
@@ -278,7 +332,8 @@ function adminSettings(s){
  </div>`;
 }
 async function saveSettings(){
- try{await db.collection("settings").doc("main").set({shopName:$("shopName").value.trim()||"ভিন্নতা টেলিকম প্লাস",targetHours:Number($("targetHours").value||8)},{merge:true});toast("Settings saved")}catch(e){toast(errorText(e))}
+ if(!await checkInternet()){toast("ইন্টারনেট সংযোগ নেই।");return}
+ try{await db.collection("settings").doc("main").set({shopName:$("shopName").value.trim()||"ভিন্নতা টেলিকম প্লাস",targetHours:Number($("targetHours").value||8),whatsappNumber:$("whatsappNumber").value.trim(),verificationIntervalMinutes:Math.max(15,Number($("verificationInterval").value||60)),verificationGraceMinutes:Math.max(1,Number($("verificationGrace").value||15))},{merge:true});toast("Settings saved")}catch(e){toast(errorText(e))}
 }
 
 /* ---------- Employee ---------- */
@@ -321,6 +376,7 @@ function openWhatsAppVerification(){
  window.open(`https://wa.me/${number}?text=${encodeURIComponent(msg)}`,"_blank");
 }
 async function confirmPhotoSent(){
+ if(!await checkInternet()){toast("ইন্টারনেট সংযোগ নেই। Verification সংরক্ষণ করা যায়নি।");return}
  const s=activeMySession(user.uid); if(!s)return;
  try{await db.collection("sessions").doc(s.id).update({lastVerificationAt:firebase.firestore.FieldValue.serverTimestamp()});toast("Verification time recorded 📸")}catch(e){toast(errorText(e))}
 }
@@ -333,6 +389,7 @@ async function autoVerificationCheck(){
  }
 }
 async function startWork(){
+ if(!await checkInternet()){toast("ইন্টারনেট সংযোগ ছাড়া Work Start করা যাবে না।");return}
  try{
   if(activeSessionFor(user.uid)){toast("আপনার Active Session আছে");return}
   if(profile.workLocked){toast("Admin আপনার Work Lock করেছেন");return}
@@ -341,10 +398,12 @@ async function startWork(){
  }catch(e){toast(errorText(e))}
 }
 async function startBreak(){
+ if(!await checkInternet()){toast("ইন্টারনেট সংযোগ নেই।");return}
  const s=activeSessionFor(user.uid);if(!s)return;
  try{await db.collection("sessions").doc(s.id).update({breakStart:firebase.firestore.FieldValue.serverTimestamp()});toast("Break শুরু হয়েছে ☕")}catch(e){toast(errorText(e))}
 }
 async function resumeWork(){
+ if(!await checkInternet()){toast("ইন্টারনেট সংযোগ নেই।");return}
  const s=activeSessionFor(user.uid);if(!s||!s.breakStart)return;
  try{
   const bs=s.breakStart.toMillis?s.breakStart.toMillis():s.breakStart;
@@ -354,6 +413,7 @@ async function resumeWork(){
  }catch(e){toast(errorText(e))}
 }
 async function endWork(){
+ if(!await checkInternet()){toast("ইন্টারনেট সংযোগ নেই। Work End করা যাবে না।");return}
  const s=activeSessionFor(user.uid);if(!s)return;
  try{
   let data={endAt:firebase.firestore.FieldValue.serverTimestamp()};
@@ -371,6 +431,7 @@ function exportCSV(){
 
 /* ---------- auth boot ---------- */
 auth.onAuthStateChanged(async u=>{
+ if(!networkOK){setNetworkUI(false);return}
  if(!u){renderLogin();return}
  user=u;
  try{
@@ -382,6 +443,5 @@ auth.onAuthStateChanged(async u=>{
  }catch(e){console.error(e);renderLogin()}
 });
 </script>
-<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.warn));}</script>
 </body>
 </html>
